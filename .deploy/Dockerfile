@@ -5,7 +5,6 @@ FROM php:${PHP_VERSION}-fpm-alpine AS php-system-setup
 RUN apk add --no-cache dcron busybox-suid libcap curl zip unzip git \
     libpng-dev libjpeg-turbo-dev freetype-dev \
     libzip-dev postgresql-dev \
-    png-dev jpeg-dev freetype-dev \
     zlib-dev libxml2-dev \
     oniguruma-dev icu-dev \
     make autoconf gcc g++ \
