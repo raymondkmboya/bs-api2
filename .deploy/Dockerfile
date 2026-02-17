@@ -2,7 +2,18 @@ ARG PHP_VERSION=${PHP_VERSION:-8.4}
 FROM php:${PHP_VERSION}-fpm-alpine AS php-system-setup
 
 # Install system dependencies
-RUN apk add --no-cache dcron busybox-suid libcap curl zip unzip git
+RUN apk add --no-cache dcron busybox-suid libcap curl zip unzip git \
+    libpng-dev libjpeg-turbo-dev freetype-dev \
+    libzip-dev postgresql-dev \
+    png-dev jpeg-dev freetype-dev \
+    zlib-dev libxml2-dev \
+    oniguruma-dev icu-dev \
+    make autoconf gcc g++ \
+    linux-headers
+
+# Set environment variables for gd library
+ENV PNG_CFLAGS=""
+ENV PNG_LIBS=""
 
 # Install PHP extensions
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
