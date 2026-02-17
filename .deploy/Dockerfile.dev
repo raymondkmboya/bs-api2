@@ -1,0 +1,60 @@
+FROM php:8.4-cli
+
+# --- Install system dependencies ---
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    zip \
+    unzip \
+    libpq-dev \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    libicu-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- Configure GD ---
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
+
+# --- Install PHP extensions ---
+RUN docker-php-ext-install \
+    pdo_mysql \
+    pdo_pgsql \
+    bcmath \
+    gd \
+    intl \
+    zip \
+    pcntl
+
+# --- Install Redis ---
+RUN pecl install redis && docker-php-ext-enable redis
+
+# --- Enable Opcache ---
+RUN docker-php-ext-enable opcache
+
+# --- Set working directory ---
+WORKDIR /var/www/html
+
+# --- Copy composer files for caching ---
+COPY composer.json composer.lock ./
+
+# --- Install composer ---
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Skip scripts for dev; we'll run them manually after mounting the code
+RUN composer install --ignore-platform-reqs --no-scripts
+
+# --- Copy app code (overwritten by volume in dev) ---
+COPY . .
+
+# Generate autoloads
+RUN composer dump-autoload
+
+# --- Expose port ---
+# EXPOSE 9000
+
+# --- Start PHP-FPM ---
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
