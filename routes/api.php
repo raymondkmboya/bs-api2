@@ -254,7 +254,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/fee-groups', [PaymentController::class, 'getFeeGroups'])->name('fee.groups');
 
         // Generate Control Number
-        Route::post('/control-number/{paymentId}', [PaymentController::class, 'generateControlNumber'])->name('control.number');
+        Route::get('/control-number/{paymentId}', [PaymentController::class, 'generateControlNumber'])->name('control.number');
 
         Route::get('/', [PaymentController::class, 'index'])->name('index');
         Route::get('/{id}', [PaymentController::class, 'show'])->name('show');
