@@ -1114,9 +1114,9 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function generateControlNumber(Request $request, $paymentId)
+    public function generateControlNumber(Request $request)
     {
-        $payment = Payment::find($paymentId);
+        $payment = Payment::find($request->paymentId);
         if (!$payment) {
             return response()->json([
                 'success' => false,
@@ -1127,7 +1127,7 @@ class PaymentController extends Controller
         // generate control number
 
         $invoiceData = [
-            'payment_id' => $paymentId,
+            'payment_id' => $request->paymentId,
             'student_name' => $payment->student->first_name . ' ' . $payment->student->last_name,
             'student_number' => $payment->student->student_number,
             'amount' => $payment->feeStructure->amount,
@@ -1137,7 +1137,7 @@ class PaymentController extends Controller
         $response = AppHelper::instance()->sendNMBInvoice($invoiceData);
 
         if($response['status'] === 'success'){
-            $controlNumber = 'SAS953' . str_pad($paymentId, 4, '0', STR_PAD_LEFT);
+            $controlNumber = 'SAS953' . str_pad($payment->paymentId, 4, '0', STR_PAD_LEFT);
             $payment->update(['control_number' => $controlNumber]);
 
             return response()->json([
