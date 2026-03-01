@@ -1114,7 +1114,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    public function generateControlNumber($paymentId)
+    public function generateControlNumber(Request $request, $paymentId)
     {
         $payment = Payment::find($paymentId);
         if (!$payment) {
