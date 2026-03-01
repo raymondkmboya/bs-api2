@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Models\Payment;
 use App\Models\Transaction;
-use App\Services\SelcomService;
+// use App\Services\SelcomService;
 use App\Helpers\AppHelper;
 
 
@@ -78,7 +78,7 @@ class StudentController extends Controller
     /**
      * Register new student (Stage 1)
      */
-    public function register(Request $request, SelcomService $selcom): JsonResponse
+    public function register(Request $request): JsonResponse
     {
         try {
             //validate sent data
@@ -120,7 +120,7 @@ class StudentController extends Controller
             }
 
             // Use database transaction to ensure all or nothing
-            return DB::transaction(function () use ($validated, $selcom) {
+            return DB::transaction(function () use ($validated) {
 
                 // Create Parent record (parent information is required)
                 $parentData = [
@@ -772,12 +772,12 @@ class StudentController extends Controller
         return DB::transaction(function () use ($student, $validated) {
             // Update basic student information
             $studentData = collect($validated)->except(['subjects', 'parents'])->toArray();
-            
+
             // Convert null address fields to empty strings to satisfy database constraints
             $studentData['street'] = $studentData['street'] ?? '';
             $studentData['city'] = $studentData['city'] ?? '';
             $studentData['region'] = $studentData['region'] ?? '';
-            
+
             $student->update($studentData);
 
             // Update subjects if provided
@@ -796,7 +796,7 @@ class StudentController extends Controller
                             'parent_phone' => $parentData['phone'],
                             'relationship_to_student' => $parentData['relationship'],
                         ]);
-                        
+
                         // Update student's parent_id for the first parent
                         if ($index === 0) {
                             $student->parent_id = $parent->id;
