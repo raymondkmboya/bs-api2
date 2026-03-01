@@ -248,12 +248,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/student/statement/{studentId}', [PaymentController::class, 'generateStudentStatement'])->name('student.statement');
         Route::post('/income-statement', [PaymentController::class, 'generateIncomeStatement'])->name('income.statement');
 
-
-
         // Fee Structure
         Route::get('/fee-structures', [PaymentController::class, 'getFeeStructure'])->name('fee.structure');
         Route::get('/fee-structure/class-level/{classLevelId}', [PaymentController::class, 'classLevelFeeStructure'])->name('fee.structure.class.level');
         Route::get('/fee-groups', [PaymentController::class, 'getFeeGroups'])->name('fee.groups');
+
+        // Generate Control Number
+        Route::post('/control-number/{paymentId}', [PaymentController::class, 'generateControlNumber'])->name('control.number');
 
         Route::get('/', [PaymentController::class, 'index'])->name('index');
         Route::get('/{id}', [PaymentController::class, 'show'])->name('show');

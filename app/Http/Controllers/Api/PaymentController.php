@@ -1114,5 +1114,45 @@ class PaymentController extends Controller
         ]);
     }
 
+    public function generateControlNumber($paymentId)
+    {
+        $payment = Payment::find($paymentId);
+        if (!$payment) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment not found'
+            ], 404);
+        }
+
+        // generate control number
+
+        $invoiceData = [
+            'payment_id' => $paymentId,
+            'student_name' => $payment->student->first_name . ' ' . $payment->student->last_name,
+            'student_number' => $payment->student->student_number,
+            'amount' => $payment->feeStructure->amount,
+            'type' => 'Fee',
+        ];
+
+        $response = AppHelper::instance()->sendNMBInvoice($invoiceData);
+
+        if($response['status'] === 'success'){
+            $controlNumber = 'SAS953' . str_pad($paymentId, 4, '0', STR_PAD_LEFT);
+            $payment->update(['control_number' => $controlNumber]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Control number generated successfully',
+                'data' => $payment
+            ]);
+        }else{
+            return response()->json([
+                'success' => false,
+                'message' => 'Control number not generated successfully',
+                'data' => $payment
+            ]);
+        }
+    }
+
 
 }

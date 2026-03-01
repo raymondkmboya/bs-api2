@@ -119,8 +119,39 @@ class StudentController extends Controller
                 ], 422);
             }
 
+            // Check if registration fee structure exists
+            $registrationFee = FeeStructure::whereHas('feeGroup', function($query) {
+                    $query->where('fee_group_name', 'Registration Fee');
+                })
+                ->first();
+
+            $tuitionFee = FeeStructure::whereHas('feeGroup', function($query) use ($validated) {
+                    $query->where([
+                        'fee_group_name' => 'Tuition Fee',
+                        'class_level_id' => $validated['class_level_id'],
+                        'admission_month' => now()->format('F') // Full month name (January, February, etc.)
+                    ]);
+                })
+                ->first();
+
+            if (!$tuitionFee)  {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tution fee structure not found. Please create registration fee structure first.',
+                    'error' => 'Tuition fee structure is required for student registration'
+                ], 422);
+            }
+            
+            if (!$registrationFee)  {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registration fee structure not found. Please create registration fee structure first.',
+                    'error' => 'Registration fee structure is required for student registration'
+                ], 422);
+            }
+
             // Use database transaction to ensure all or nothing
-            return DB::transaction(function () use ($validated) {
+            return DB::transaction(function () use ($validated, $tuitionFee, $registrationFee) {
 
                 // Create Parent record (parent information is required)
                 $parentData = [
@@ -154,37 +185,6 @@ class StudentController extends Controller
                 ];
 
                 $student = Student::create($studentData);
-
-                // Check if registration fee structure exists
-                $registrationFee = FeeStructure::whereHas('feeGroup', function($query) {
-                        $query->where('fee_group_name', 'Registration Fee');
-                    })
-                    ->first();
-
-                $tuitionFee = FeeStructure::whereHas('feeGroup', function($query) use ($validated) {
-                        $query->where([
-                            'fee_group_name' => 'Tuition Fee',
-                            'class_level_id' => $validated['class_level_id'],
-                            'admission_month' => now()->format('F') // Full month name (January, February, etc.)
-                        ]);
-                    })
-                    ->first();
-
-                if (!$tuitionFee)  {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Tution fee structure not found. Please create registration fee structure first.',
-                        'error' => 'Tuition fee structure is required for student registration'
-                    ], 422);
-                }
-
-                if (!$registrationFee)  {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Registration fee structure not found. Please create registration fee structure first.',
-                        'error' => 'Registration fee structure is required for student registration'
-                    ], 422);
-                }
 
                 $registrationInoviceNumber = 'REG-' . $student->id . '-' . date('Y');
 
