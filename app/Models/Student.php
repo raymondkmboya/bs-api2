@@ -15,6 +15,7 @@ class Student extends Authenticatable
     protected $fillable = [
         'user_id',
         'student_number',
+        'student_photo',
         'first_name',
         'middle_name',
         'last_name',
@@ -26,6 +27,7 @@ class Student extends Authenticatable
         'class_level_stream_id',
         'region',
         'address',
+        'hear_from_source',
         'parent_id',
         'status',
         'registration_date',
@@ -39,6 +41,8 @@ class Student extends Authenticatable
         'enrollment_data'
     ];
 
+    protected $appends = ['student_id'];
+
     protected $hidden = [
         'password',
         'remember_token'
@@ -50,6 +54,12 @@ class Student extends Authenticatable
         'status' => 'string',
         'registration_date' => 'date'
     ];
+
+    // Accessor to get student_id as an alias for id
+    public function getStudentIdAttribute()
+    {
+        return $this->id;
+    }
 
     protected static function boot()
     {
@@ -79,6 +89,56 @@ class Student extends Authenticatable
     }
 
     /**
+     * Get class level of student.
+     */
+    public function classLevel()
+    {
+        return $this->belongsTo(ClassLevel::class, 'class_level_id');
+    }
+
+    /**
+     * Get class level stream of student.
+     */
+    public function classLevelStream()
+    {
+        return $this->belongsTo(ClassLevelStream::class, 'class_level_stream_id');
+    }
+
+    /**
+     * Get payments for this student.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * Get transactions for this student.
+     */
+    public function transactions()
+    {
+        return $this->hasManyThrough(Payment::class, Transaction::class);
+    }
+
+    /**
+     * Get attendance records for this student.
+     */
+    public function attendanceRecords()
+    {
+        return $this->hasMany(StudentAttendanceRecord::class);
+    }
+
+    public function followUps()
+    {
+        return $this->hasMany(RegistrationFollowUp::class);
+    }
+
+    public function latestFollowUp()
+    {
+        return $this->hasOne(RegistrationFollowUp::class)->latest();
+    }
+
+    /**
      * Generate student number in format YYYY-NNNN
      */
     public function generateStudentNumber()
@@ -96,12 +156,6 @@ class Student extends Authenticatable
         }
 
         return $year . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-    }
-
-    // Relationships
-    public function attendanceRecords()
-    {
-        return $this->hasMany(StudentAttendanceRecord::class, 'student_id', 'student_id');
     }
 
     // Accessors
@@ -124,6 +178,34 @@ class Student extends Authenticatable
     }
 
     /**
+     * Scope to get registered students with pending follow-ups
+     */
+    public function scopeFollowedUp($query)
+    {
+        return $query->where('status', 'registered')
+            ->whereHas('followUps', function($followUpQuery) {
+                $followUpQuery->where('status', 'pending');
+            });
+    }
+
+    public function scopeDueTodayFollowedUp($query)
+    {
+        return $query->where('status', 'registered')
+            ->whereHas('followUps', function($followUpQuery) {
+                $followUpQuery->where('status', 'pending')
+                              ->whereDate('next_follow_up_date', now());
+            });
+    }
+
+    public function scopeStoppedFollowedUp($query)
+    {
+        return $query->where('status', 'registered')
+            ->whereHas('followUps', function($followUpQuery) {
+                $followUpQuery->where('status', 'stopped');
+            });
+    }
+
+    /**
      * Scope to get admitted students only
      */
     public function scopeAdmitted($query)
@@ -131,12 +213,27 @@ class Student extends Authenticatable
         return $query->where('status', 'admitted');
     }
 
+    public function scopeSuspended($query)
+    {
+        return $query->where('status', 'suspended');
+    }
+
+    public function scopeInactive($query)
+    {
+        return $query->where('status', 'inactive');
+    }
+
     /**
      * Scope to get enrolled students only
      */
     public function scopeEnrolled($query)
     {
-        return $query->where('status', 'enrolled');
+        return $query->where('status', 'admitted')->whereNotNull('class_level_stream_id');
+    }
+
+    public function scopeNotEnrolled($query)
+    {
+        return $query->where('status', 'admitted')->whereNull('class_level_stream_id');
     }
 
     /**
@@ -148,10 +245,20 @@ class Student extends Authenticatable
     }
 
     /**
+     * Get subjects for this student.
+     */
+    public function subjects()
+    {
+        return $this->belongsToMany(Subject::class, 'student_subjects');
+    }
+
+    /**
      * Scope to get students by stream
      */
     public function scopeByStream($query, $stream)
     {
         return $query->where('stream', $stream);
     }
+
+
 }

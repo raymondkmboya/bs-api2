@@ -10,7 +10,7 @@ class ClassLevelStream extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
+        'class_leve_stream_name',
         'class_level_id',
         'description',
         'capacity',

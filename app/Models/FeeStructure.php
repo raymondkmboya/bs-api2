@@ -14,6 +14,8 @@ class FeeStructure extends Model
         'class_level_id',
         'fee_name',
         'amount',
+        'initial_amount',
+        'installments',
         'academic_year',
         'status'
     ];

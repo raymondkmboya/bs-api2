@@ -68,6 +68,7 @@ class Staff extends Authenticatable
         'staff_id',
         'department_id',
         'position',
+        'role',
         'employment_type',
         'hire_date',
         'salary',
@@ -117,7 +118,7 @@ class Staff extends Authenticatable
 
     public function subjects()
     {
-        return $this->belongsToMany(Subject::class, 'staff_subjects');
+        return $this->hasMany(Subject::class, 'teacher_id');
     }
 
     public function attendance()
@@ -149,4 +150,5 @@ class Staff extends Authenticatable
     {
         return $query->whereIn('position', ['Principal', 'Vice Principal', 'Administrator', 'Secretary']);
     }
+
 }

@@ -10,8 +10,7 @@ class SchoolEnquiry extends Model
     use HasFactory;
 
     protected $fillable = [
-        'first_name',
-        'last_name',
+        'full_name',
         'email',
         'phone',
         'level_interested',
@@ -28,9 +27,14 @@ class SchoolEnquiry extends Model
         'source' => 'string'
     ];
 
-    public function getFullNameAttribute()
+    // public function getFullNameAttribute()
+    // {
+    //     return "{$this->first_name} {$this->last_name}";
+    // }
+
+    public function followUps()
     {
-        return "{$this->first_name} {$this->last_name}";
+        return $this->hasMany(SchoolEnquiryFollowUp::class);
     }
 
     public function getStatusLabelAttribute()
